@@ -1,3 +1,4 @@
+// lib/fetchLatestOrders.ts
 import { db } from './firebase';
 import {
   collection,
@@ -10,6 +11,8 @@ export interface OrderData {
   name: string;
   productName: string;
   productPrice: string;
+  address: string;
+  mobile: string;
   createdAt: Timestamp;
 }
 
@@ -32,6 +35,8 @@ export async function fetchLatestOrders(): Promise<OrderData[]> {
           name: data.name || '',
           productName: data.productName || '',
           productPrice: data.productPrice || '',
+          address: data.address || '',
+          mobile: data.mobile || '',
           createdAt: data.createdAt,
         });
       }
@@ -41,7 +46,6 @@ export async function fetchLatestOrders(): Promise<OrderData[]> {
   // Step 3: Sort all orders by createdAt descending
   allOrders.sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis());
 
-  // Step 4: Return top 3
+  // Step 4: Return top 3 latest orders
   return allOrders.slice(0, 3);
 }
-
