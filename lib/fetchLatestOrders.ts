@@ -1,5 +1,5 @@
 import { collection, getDocs } from "firebase/firestore";
-import { db } from "@/lib/firebase"; // update path as needed
+import { db } from "@/lib/firebase"; // adjust path if needed
 
 export interface Order {
   userId: string;
@@ -18,27 +18,23 @@ export async function getLatestFiveOrdersFromAllUsers(): Promise<Order[]> {
 
   for (const userDoc of usersSnapshot.docs) {
     const userId = userDoc.id;
-
-    const ordersSnapshot = await getDocs(
-      collection(db, "users", userId, "orders")
-    );
+    const ordersRef = collection(db, "users", userId, "orders");
+    const ordersSnapshot = await getDocs(ordersRef);
 
     ordersSnapshot.forEach((doc) => {
       const data = doc.data();
-      const createdAt = data.createdAt?.toDate?.();
+      const createdAt = data.createdAt?.toDate?.() ?? new Date(0);
 
-      if (createdAt) {
-        allOrders.push({
-          userId,
-          orderId: doc.id,
-          name: data.name || "",
-          productName: data.productName || "",
-          address: data.address || "",
-          mobile: data.mobile || "",
-          productPrice: data.productPrice || "",
-          createdAt,
-        });
-      }
+      allOrders.push({
+        userId,
+        orderId: doc.id,
+        name: data.name || "",
+        productName: data.productName || "",
+        address: data.address || "",
+        mobile: data.mobile || "",
+        productPrice: data.productPrice || "",
+        createdAt,
+      });
     });
   }
 
