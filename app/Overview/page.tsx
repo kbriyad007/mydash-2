@@ -10,11 +10,10 @@ export default function OverviewPage() {
 
   useEffect(() => {
     async function loadOrders() {
-      const latestThree = await fetchLatestOrders();
-      setOrders(latestThree);
+      const latestOrders = await fetchLatestOrders();
+      setOrders(latestOrders);
       setLoading(false);
     }
-
     loadOrders();
   }, []);
 
@@ -25,9 +24,7 @@ export default function OverviewPage() {
       </h1>
 
       {loading ? (
-        <div className="flex items-center justify-center py-20">
-          <p className="text-lg animate-pulse text-slate-300">Loading orders...</p>
-        </div>
+        <p className="text-center text-slate-400 animate-pulse">Loading orders...</p>
       ) : orders.length === 0 ? (
         <p className="text-center text-slate-400">No orders found.</p>
       ) : (
