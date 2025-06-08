@@ -14,12 +14,14 @@ export interface OrderData {
   name: string;
   productName: string;
   productPrice: string;
+  address: string;
+  mobile: string;
   createdAt: Timestamp;
 }
 
 export async function fetchLatestOrders(): Promise<OrderData[]> {
   const q = query(
-    collectionGroup(db, 'orders'), // 🔥 query across all users
+    collectionGroup(db, 'orders'), // Query all 'orders' subcollections
     orderBy('createdAt', 'desc'),
     limit(3)
   );
@@ -36,6 +38,8 @@ export async function fetchLatestOrders(): Promise<OrderData[]> {
         name: data.name || '',
         productName: data.productName || '',
         productPrice: data.productPrice || '',
+        address: data.address || '',
+        mobile: data.mobile || '',
         createdAt: data.createdAt,
       });
     }
@@ -43,4 +47,3 @@ export async function fetchLatestOrders(): Promise<OrderData[]> {
 
   return orders;
 }
-
