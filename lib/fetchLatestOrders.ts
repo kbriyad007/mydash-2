@@ -52,7 +52,5 @@ export async function fetchLatestOrders(): Promise<OrderData[]> {
   const latestOrders = allOrders
     .filter(order => order.createdAt instanceof Timestamp)
     .sort((a, b) => b.createdAt!.toMillis() - a.createdAt!.toMillis())
-    .slice(0, 5);
-
-  return latestOrders;
+  return latestOrders.slice(0,5);
 }
