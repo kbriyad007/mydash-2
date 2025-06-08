@@ -1,5 +1,5 @@
 import { collection, getDocs } from "firebase/firestore";
-import { db } from "@/lib/firebase"; // adjust path if needed
+import { db } from "@/lib/firebase"; // adjust this path if needed
 
 export interface Order {
   userId: string;
@@ -38,9 +38,9 @@ export async function fetchLatestOrders(): Promise<Order[]> {
     });
   }
 
-  // Sort by createdAt descending
+  // Sort by latest
   allOrders.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
-  // Return the latest 5
+  // Return the latest 5 orders
   return allOrders.slice(0, 5);
 }
