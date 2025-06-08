@@ -1,108 +1,85 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { fetchNames, OrderData } from "../../lib/fetchNames";
+import { useEffect, useState } from "react";
 import { Timestamp } from "firebase/firestore";
+import { fetchLatestOrders, OrderData } from "@/lib/fetchLatestOrders";
 
-export default function ProductsPage() {
-  const [allOrders, setAllOrders] = useState<OrderData[]>([]);
-  const [latestTwoOrders, setLatestTwoOrders] = useState<OrderData[]>([]);
+export default function OverviewPage() {
+  const [orders, setOrders] = useState<OrderData[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function getData() {
-      const data = await fetchNames();
+    async function loadOrders() {
+      try {
+        const allOrders = await fetchLatestOrders();
 
-      const sorted = data
-        .filter((order) => order.Time instanceof Timestamp)
-        .sort(
-          (a, b) =>
-            (b.Time as Timestamp).toMillis() - (a.Time as Timestamp).toMillis()
-        );
+        const sorted = allOrders
+          .filter((order) => order.createdAt instanceof Timestamp)
+          .sort(
+            (a, b) =>
+              (b.createdAt as Timestamp).toMillis() -
+              (a.createdAt as Timestamp).toMillis()
+          );
 
-      setAllOrders(data);
-      setLatestTwoOrders(sorted.slice(0, 2));
-      setLoading(false);
+        setOrders(sorted.slice(0, 5));
+      } catch (error) {
+        console.error("Failed to fetch orders:", error);
+      } finally {
+        setLoading(false);
+      }
     }
 
-    getData();
+    loadOrders();
   }, []);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-900 text-white">
-        <p className="text-lg animate-pulse">Loading orders...</p>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-slate-900 text-white p-8 max-w-6xl mx-auto">
-      <h1 className="text-4xl font-extrabold mb-10 text-center text-white">
-        📦 Orders Overview
+    <div className="min-h-screen bg-slate-900 text-white px-6 py-10 md:py-16 max-w-6xl mx-auto">
+      <h1 className="text-4xl font-extrabold mb-10 text-center">
+        📦 Latest 5 Orders
       </h1>
 
-      {/* Block 1: All Orders */}
-      <section className="mb-16">
-        <h2 className="text-2xl font-bold mb-6 border-b border-slate-700 pb-2">
-          All Orders <span className="text-blue-400">({allOrders.length})</span>
-        </h2>
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {allOrders.map((order, i) => (
-            <div
-              key={order.orderId || i}
-              className="bg-slate-800 backdrop-blur-md p-5 rounded-xl shadow-md border border-slate-700 hover:border-blue-500 transition-all"
-            >
-              <p className="mb-1">
-                <strong className="text-blue-300">Name:</strong>{" "}
-                {typeof order.Name === "string" ? order.Name : "N/A"}
-              </p>
-              <p className="mb-1">
-                <strong className="text-blue-300">Order ID:</strong>{" "}
-                {order.orderId}
-              </p>
-              <p className="text-sm text-slate-400">
-                <strong>Time:</strong>{" "}
-                {order.Time instanceof Timestamp
-                  ? order.Time.toDate().toLocaleString()
-                  : "No timestamp"}
-              </p>
-            </div>
-          ))}
+      {loading ? (
+        <div className="flex items-center justify-center py-20">
+          <p className="text-lg animate-pulse text-slate-300">Loading orders...</p>
         </div>
-      </section>
-
-      {/* Block 2: Latest 2 Orders */}
-      <section>
-        <h2 className="text-2xl font-bold mb-6 border-b border-slate-700 pb-2">
-          🚀 Latest 2 Orders
-        </h2>
-        <div className="space-y-6">
-          {latestTwoOrders.length === 0 && (
-            <p className="text-slate-400">No recent orders found.</p>
-          )}
-          {latestTwoOrders.map((order, i) => (
-            <div
-              key={order.orderId || i}
-              className="bg-gradient-to-r from-blue-600 to-blue-800 p-6 rounded-xl shadow-lg border-l-8 border-white/30"
-            >
-              <p className="text-xl font-semibold text-white mb-1">
-                {typeof order.Name === "string" ? order.Name : "N/A"}
-              </p>
-              <p className="text-slate-100">
-                <span className="text-sm text-slate-300">Order ID:</span>{" "}
-                <span className="font-mono">{order.orderId}</span>
-              </p>
-              <p className="text-sm text-slate-300 mt-1">
-                Time:{" "}
-                {order.Time instanceof Timestamp
-                  ? order.Time.toDate().toLocaleString()
-                  : "No timestamp"}
-              </p>
-            </div>
-          ))}
+      ) : orders.length === 0 ? (
+        <p className="text-center text-slate-400">No orders found.</p>
+      ) : (
+        <div className="overflow-x-auto rounded-xl shadow-md border border-slate-700">
+          <table className="w-full text-left bg-slate-800">
+            <thead className="bg-slate-700 text-slate-200">
+              <tr>
+                <th className="px-4 py-3 font-semibold">Name</th>
+                <th className="px-4 py-3 font-semibold">Product</th>
+                <th className="px-4 py-3 font-semibold">Price</th>
+                <th className="px-4 py-3 font-semibold">Address</th>
+                <th className="px-4 py-3 font-semibold">Mobile</th>
+                <th className="px-4 py-3 font-semibold">Created At</th>
+              </tr>
+            </thead>
+            <tbody>
+              {orders.map((order, index) => (
+                <tr
+                  key={order.orderId || index}
+                  className="border-t border-slate-600 hover:bg-slate-700/50 transition"
+                >
+                  <td className="px-4 py-3">{order.name || "N/A"}</td>
+                  <td className="px-4 py-3">{order.productName || "N/A"}</td>
+                  <td className="px-4 py-3">{order.productPrice || "N/A"}</td>
+                  <td className="px-4 py-3">{order.address || "N/A"}</td>
+                  <td className="px-4 py-3">{order.mobile || "N/A"}</td>
+                  <td className="px-4 py-3 text-sm text-slate-400">
+                    {order.createdAt instanceof Timestamp
+                      ? order.createdAt.toDate().toLocaleString()
+                      : "N/A"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-      </section>
+      )}
     </div>
   );
 }
+
