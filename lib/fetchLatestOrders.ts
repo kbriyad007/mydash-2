@@ -1,11 +1,6 @@
-
 // lib/fetchLatestOrders.ts
-import {
-  collection,
-  getDocs,
-  getFirestore,
-} from "firebase/firestore";
-import { db } from "@/lib/firebase"; // adjust based on your setup
+import { collection, getDocs } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 export interface Order {
   id: string;
@@ -45,7 +40,6 @@ export async function fetchLatestOrders(): Promise<Order[]> {
     }
   }
 
-  // Sort by createdAt descending and return top 3
   return allOrders
     .sort((a, b) => b.createdAt - a.createdAt)
     .slice(0, 3);
