@@ -12,7 +12,7 @@ export interface Order {
   createdAt: Date;
 }
 
-export async function getLatestFiveOrdersFromAllUsers(): Promise<Order[]> {
+export async function fetchLatestOrders(): Promise<Order[]> {
   const usersSnapshot = await getDocs(collection(db, "users"));
   const allOrders: Order[] = [];
 
