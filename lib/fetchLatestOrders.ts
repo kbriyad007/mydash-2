@@ -9,11 +9,16 @@ export default function OverviewPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function loadOrders() {
-      const latestFive = await fetchLatestOrders();
-      setOrders(latestFive);
-      setLoading(false);
-    }
+    const loadOrders = async () => {
+      try {
+        const latestFive = await fetchLatestOrders();
+        setOrders(latestFive);
+      } catch (error) {
+        console.error("Failed to load orders:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
     loadOrders();
   }, []);
