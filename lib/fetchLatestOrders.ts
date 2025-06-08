@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { collection, getDocs, Timestamp } from "firebase/firestore";
-import { db } from "./firebase"; // adjust path to your firebase config
+import { db } from "./firebase"; // adjust this path
 
 type Order = {
   id: string;
@@ -72,3 +72,4 @@ export default function OrdersList() {
     </div>
   );
 }
+
