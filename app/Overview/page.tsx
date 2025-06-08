@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { fetchLatestOrders, OrderData } from "../../lib/fetchLatestOrders";
+import { fetchLatestOrders, Order } from "../../lib/fetchLatestOrders";
 import { Timestamp } from "firebase/firestore";
 
 export default function OverviewPage() {
-  const [orders, setOrders] = useState<OrderData[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -26,7 +26,7 @@ export default function OverviewPage() {
   return (
     <div className="min-h-screen bg-slate-900 text-white px-6 py-10 md:py-16 max-w-6xl mx-auto">
       <h1 className="text-4xl font-extrabold mb-10 text-center">
-        📦 Latest 3 Orders
+        📦 Latest 5 Orders
       </h1>
 
       {loading ? (
@@ -60,8 +60,8 @@ export default function OverviewPage() {
                   <td className="px-4 py-3">{order.address || "N/A"}</td>
                   <td className="px-4 py-3">{order.mobile || "N/A"}</td>
                   <td className="px-4 py-3 text-sm text-slate-400">
-                    {order.createdAt instanceof Timestamp
-                      ? order.createdAt.toDate().toLocaleString()
+                    {order.createdAt instanceof Date
+                      ? order.createdAt.toLocaleString()
                       : "No timestamp"}
                   </td>
                 </tr>
