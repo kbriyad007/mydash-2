@@ -31,9 +31,7 @@ export default function OverviewPage() {
 
       {loading ? (
         <div className="flex items-center justify-center py-20">
-          <p className="text-lg animate-pulse text-slate-300">
-            Loading orders...
-          </p>
+          <p className="text-lg animate-pulse text-slate-300">Loading orders...</p>
         </div>
       ) : orders.length === 0 ? (
         <p className="text-center text-slate-400">No orders found.</p>
