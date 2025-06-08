@@ -1,12 +1,13 @@
-// lib/fetchLatestOrders.ts
 import { db } from './firebase';
 import {
+  collection,
   collectionGroup,
   getDocs,
-  query,
   orderBy,
+  query,
   limit,
   Timestamp,
+  DocumentData,
 } from 'firebase/firestore';
 
 export interface OrderData {
@@ -14,36 +15,37 @@ export interface OrderData {
   name: string;
   productName: string;
   productPrice: string;
-  address: string;
-  mobile: string;
   createdAt: Timestamp;
 }
 
 export async function fetchLatestOrders(): Promise<OrderData[]> {
-  const q = query(
-    collectionGroup(db, 'orders'), // Query all 'orders' subcollections
-    orderBy('createdAt', 'desc'),
-    limit(3)
-  );
+  // Step 1: Get all users
+  const usersSnapshot = await getDocs(collection(db, 'users'));
+  const allOrders: OrderData[] = [];
 
-  const snapshot = await getDocs(q);
+  // Step 2: For each user, fetch orders
+  for (const userDoc of usersSnapshot.docs) {
+    const userId = userDoc.id;
+    const ordersRef = collection(db, `users/${userId}/orders`);
+    const ordersSnapshot = await getDocs(ordersRef);
 
-  const orders: OrderData[] = [];
+    ordersSnapshot.forEach((orderDoc) => {
+      const data = orderDoc.data();
+      if (data.createdAt instanceof Timestamp) {
+        allOrders.push({
+          orderId: orderDoc.id,
+          name: data.name || '',
+          productName: data.productName || '',
+          productPrice: data.productPrice || '',
+          createdAt: data.createdAt,
+        });
+      }
+    });
+  }
 
-  snapshot.forEach((doc) => {
-    const data = doc.data();
-    if (data.createdAt instanceof Timestamp) {
-      orders.push({
-        orderId: doc.id,
-        name: data.name || '',
-        productName: data.productName || '',
-        productPrice: data.productPrice || '',
-        address: data.address || '',
-        mobile: data.mobile || '',
-        createdAt: data.createdAt,
-      });
-    }
-  });
+  // Step 3: Sort all orders by createdAt descending
+  allOrders.sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis());
 
-  return orders;
+  // Step 4: Return top 3
+  return allOrders.slice(0, 3);
 }
