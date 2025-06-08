@@ -3,11 +3,10 @@ import {
   collection,
   getDocs,
   Timestamp,
-  doc,
 } from 'firebase/firestore';
 
 export interface OrderData {
-  orderId: string;       // ID of the order document inside the subcollection
+  orderId: string;
   name: string;
   productName: string;
   productPrice: string;
@@ -25,13 +24,12 @@ export async function fetchLatestOrders(): Promise<OrderData[]> {
     const ordersSnapshot = await getDocs(collection(db, `users/${userId}/orders`));
 
     for (const orderDoc of ordersSnapshot.docs) {
-      // Replace 'orderDocs' with your actual subcollection name here:
+      // Replace 'orderDocs' with your actual subcollection name here
       const subOrdersSnapshot = await getDocs(collection(db, `users/${userId}/orders/${orderDoc.id}/orderDocs`));
 
       subOrdersSnapshot.forEach((subDoc) => {
         const data = subDoc.data();
 
-        // Firestore may return timestamp as plain object; convert if needed
         if (!(data.createdAt instanceof Timestamp) && data.createdAt?.seconds) {
           data.createdAt = new Timestamp(data.createdAt.seconds, data.createdAt.nanoseconds);
         }
@@ -51,9 +49,7 @@ export async function fetchLatestOrders(): Promise<OrderData[]> {
     }
   }
 
-  // Sort orders by createdAt descending (newest first)
   allOrders.sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis());
 
-  // Return top 3 latest orders
   return allOrders.slice(0, 3);
 }
