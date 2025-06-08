@@ -1,4 +1,3 @@
-// lib/fetchLatestOrders.ts
 import { db } from './firebase';
 import {
   collection,
@@ -17,11 +16,12 @@ export interface OrderData {
 }
 
 export async function fetchLatestOrders(): Promise<OrderData[]> {
-  // Step 1: Get all users
+  // Step 1: Fetch all users
   const usersSnapshot = await getDocs(collection(db, 'users'));
+
   const allOrders: OrderData[] = [];
 
-  // Step 2: For each user, fetch orders
+  // Step 2: For each user, fetch their orders
   for (const userDoc of usersSnapshot.docs) {
     const userId = userDoc.id;
     const ordersRef = collection(db, `users/${userId}/orders`);
@@ -43,9 +43,9 @@ export async function fetchLatestOrders(): Promise<OrderData[]> {
     });
   }
 
-  // Step 3: Sort all orders by createdAt descending
+  // Step 3: Sort orders by createdAt descending (newest first)
   allOrders.sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis());
 
-  // Step 4: Return top 3 latest orders
+  // Step 4: Return only latest 3 orders
   return allOrders.slice(0, 3);
 }
