@@ -6,7 +6,7 @@ import {
 } from 'firebase/firestore';
 
 export interface OrderData {
-  orderId: string;       // id of the subcollection document containing order data
+  orderId: string;
   name: string;
   productName: string;
   productPrice: string;
@@ -24,28 +24,24 @@ export async function fetchLatestOrders(): Promise<OrderData[]> {
     const ordersSnapshot = await getDocs(collection(db, `users/${userId}/orders`));
 
     for (const orderDoc of ordersSnapshot.docs) {
-      // For each order document, get the subcollection documents:
-      const subOrdersSnapshot = await getDocs(collection(db, `users/${userId}/orders/${orderDoc.id}/ordersSubcollection`));
+      const data = orderDoc.data();
 
-      subOrdersSnapshot.forEach((subDoc) => {
-        const data = subDoc.data();
+      // Normalize createdAt if necessary
+      if (!(data.createdAt instanceof Timestamp) && data.createdAt?.seconds) {
+        data.createdAt = new Timestamp(data.createdAt.seconds, data.createdAt.nanoseconds);
+      }
 
-        if (!(data.createdAt instanceof Timestamp) && data.createdAt?.seconds) {
-          data.createdAt = new Timestamp(data.createdAt.seconds, data.createdAt.nanoseconds);
-        }
-
-        if (data.createdAt instanceof Timestamp) {
-          allOrders.push({
-            orderId: subDoc.id,
-            name: data.name || '',
-            productName: data.productName || '',
-            productPrice: data.productPrice || '',
-            address: data.address || '',
-            mobile: data.mobile || '',
-            createdAt: data.createdAt,
-          });
-        }
-      });
+      if (data.createdAt instanceof Timestamp) {
+        allOrders.push({
+          orderId: orderDoc.id,
+          name: data.name || '',
+          productName: data.productName || '',
+          productPrice: data.productPrice || '',
+          address: data.address || '',
+          mobile: data.mobile || '',
+          createdAt: data.createdAt,
+        });
+      }
     }
   }
 
