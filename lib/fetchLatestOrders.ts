@@ -3,10 +3,11 @@ import {
   collection,
   getDocs,
   Timestamp,
+  doc,
 } from 'firebase/firestore';
 
 export interface OrderData {
-  orderId: string;
+  orderId: string;       // ID of the order document inside the subcollection
   name: string;
   productName: string;
   productPrice: string;
@@ -16,57 +17,43 @@ export interface OrderData {
 }
 
 export async function fetchLatestOrders(): Promise<OrderData[]> {
-  try {
-    const usersSnapshot = await getDocs(collection(db, 'users'));
-    const allOrders: OrderData[] = [];
+  const usersSnapshot = await getDocs(collection(db, 'users'));
+  const allOrders: OrderData[] = [];
 
-    console.log(`Found ${usersSnapshot.docs.length} users.`);
+  for (const userDoc of usersSnapshot.docs) {
+    const userId = userDoc.id;
+    const ordersSnapshot = await getDocs(collection(db, `users/${userId}/orders`));
 
-    for (const userDoc of usersSnapshot.docs) {
-      const userId = userDoc.id;
-      const ordersSnapshot = await getDocs(collection(db, `users/${userId}/orders`));
-      console.log(`User ${userId} has ${ordersSnapshot.docs.length} orders.`);
+    for (const orderDoc of ordersSnapshot.docs) {
+      // Replace 'orderDocs' with your actual subcollection name here:
+      const subOrdersSnapshot = await getDocs(collection(db, `users/${userId}/orders/${orderDoc.id}/orderDocs`));
 
-      for (const orderDoc of ordersSnapshot.docs) {
-        const data = orderDoc.data();
-        console.log(`OrderDoc ID: ${orderDoc.id}, data:`, data);
+      subOrdersSnapshot.forEach((subDoc) => {
+        const data = subDoc.data();
 
-        // Fix for createdAt field type:
+        // Firestore may return timestamp as plain object; convert if needed
         if (!(data.createdAt instanceof Timestamp) && data.createdAt?.seconds) {
           data.createdAt = new Timestamp(data.createdAt.seconds, data.createdAt.nanoseconds);
-          console.log(`Fixed createdAt to Timestamp for order ${orderDoc.id}`);
         }
 
-        // TEMP: Remove filtering by createdAt to test if any orders show
-        // if (data.createdAt instanceof Timestamp) {
-
-        allOrders.push({
-          orderId: orderDoc.id,
-          name: data.name || '',
-          productName: data.productName || '',
-          productPrice: data.productPrice || '',
-          address: data.address || '',
-          mobile: data.mobile || '',
-          createdAt: data.createdAt instanceof Timestamp ? data.createdAt : Timestamp.now(),
-        });
-
-        // }
-      }
+        if (data.createdAt instanceof Timestamp) {
+          allOrders.push({
+            orderId: subDoc.id,
+            name: data.name || '',
+            productName: data.productName || '',
+            productPrice: data.productPrice || '',
+            address: data.address || '',
+            mobile: data.mobile || '',
+            createdAt: data.createdAt,
+          });
+        }
+      });
     }
-
-    if (allOrders.length === 0) {
-      console.warn('No orders found across all users.');
-      return [];
-    }
-
-    // Sort by createdAt descending, latest first
-    allOrders.sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis());
-
-    // Return top 3 latest orders
-    return allOrders.slice(0, 3);
-
-  } catch (error) {
-    console.error('Error fetching orders:', error);
-    return [];
   }
+
+  // Sort orders by createdAt descending (newest first)
+  allOrders.sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis());
+
+  // Return top 3 latest orders
+  return allOrders.slice(0, 3);
 }
