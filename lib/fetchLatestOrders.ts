@@ -6,7 +6,7 @@ import {
 } from 'firebase/firestore';
 
 export interface OrderData {
-  orderId: string;
+  orderId: string;       // id of the subcollection document containing order data
   name: string;
   productName: string;
   productPrice: string;
@@ -16,36 +16,42 @@ export interface OrderData {
 }
 
 export async function fetchLatestOrders(): Promise<OrderData[]> {
-  // Step 1: Fetch all users
   const usersSnapshot = await getDocs(collection(db, 'users'));
-
   const allOrders: OrderData[] = [];
 
-  // Step 2: For each user, fetch their orders
   for (const userDoc of usersSnapshot.docs) {
     const userId = userDoc.id;
-    const ordersRef = collection(db, `users/${userId}/orders`);
-    const ordersSnapshot = await getDocs(ordersRef);
+    const ordersSnapshot = await getDocs(collection(db, `users/${userId}/orders`));
 
-    ordersSnapshot.forEach((orderDoc) => {
-      const data = orderDoc.data();
-      if (data.createdAt instanceof Timestamp) {
-        allOrders.push({
-          orderId: orderDoc.id,
-          name: data.name || '',
-          productName: data.productName || '',
-          productPrice: data.productPrice || '',
-          address: data.address || '',
-          mobile: data.mobile || '',
-          createdAt: data.createdAt,
-        });
-      }
-    });
+    for (const orderDoc of ordersSnapshot.docs) {
+      // For each order document, get the subcollection documents:
+      const subOrdersSnapshot = await getDocs(collection(db, `users/${userId}/orders/${orderDoc.id}/ordersSubcollection`));
+
+      subOrdersSnapshot.forEach((subDoc) => {
+        const data = subDoc.data();
+
+        if (!(data.createdAt instanceof Timestamp) && data.createdAt?.seconds) {
+          data.createdAt = new Timestamp(data.createdAt.seconds, data.createdAt.nanoseconds);
+        }
+
+        if (data.createdAt instanceof Timestamp) {
+          allOrders.push({
+            orderId: subDoc.id,
+            name: data.name || '',
+            productName: data.productName || '',
+            productPrice: data.productPrice || '',
+            address: data.address || '',
+            mobile: data.mobile || '',
+            createdAt: data.createdAt,
+          });
+        }
+      });
+    }
   }
 
-  // Step 3: Sort orders by createdAt descending (newest first)
+  // Sort by createdAt descending, latest first
   allOrders.sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis());
 
-  // Step 4: Return only latest 3 orders
+  // Return top 3 latest orders
   return allOrders.slice(0, 3);
 }
