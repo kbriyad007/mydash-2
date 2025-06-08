@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { fetchLatestOrders, Order } from "../../lib/fetchLatestOrders";
-import { Timestamp } from "firebase/firestore";
+
 
 export default function OverviewPage() {
   const [orders, setOrders] = useState<Order[]>([]);
