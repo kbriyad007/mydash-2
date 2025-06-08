@@ -1,13 +1,8 @@
 import { db } from './firebase';
 import {
   collection,
-  collectionGroup,
   getDocs,
-  orderBy,
-  query,
-  limit,
   Timestamp,
-  DocumentData,
 } from 'firebase/firestore';
 
 export interface OrderData {
@@ -49,3 +44,4 @@ export async function fetchLatestOrders(): Promise<OrderData[]> {
   // Step 4: Return top 3
   return allOrders.slice(0, 3);
 }
+
